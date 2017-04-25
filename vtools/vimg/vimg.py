@@ -24,10 +24,11 @@ class vImg(np.ndarray):
         to allow for some basic image modification methods to be executed on the base class.
         Parameters:
             imgFn = string, path to image
-            **kwargs (optional, only color may be used if image=None)
-            height = in pixels, height of the blank image
-            width = in pixels, width of the blank image
-            color = in RGB tuple, the bg color for the blank image (default: black)
+            **kwargs (optional, only color may be used if img is supplied)
+            img    : numpy np.ndarray type
+            height : in pixels, height of the blank image
+            width  : in pixels, width of the blank image
+            color  : in RGB tuple, the bg color for the blank image (default: black)
             height
         """
         if not imgFn:
@@ -41,11 +42,12 @@ class vImg(np.ndarray):
                 obj.__center = (obj.w // 2, obj.h // 2)
                 obj.__color = kwargs.get('color',(0, 0, 0))
                 return obj
-            except KeyError as ke:
+            except KeyError:
                 str_err = "KeyError: If 'image' argument not provided, keyword arg(s) for "
                 str_err += ('width and height ' if not kwargs.get('height', None) and not kwargs.get('width', None)
                             else 'height ' if not kwargs.get('height', None)
-                            else 'width ')
+                            else 'width ' if not kwargs.get('width', None)
+                            else 'unknown property ')
                 str_err += 'must be provided (color is optional).'
                 print(str_err)
                 return
@@ -142,10 +144,17 @@ class vImg(np.ndarray):
     #########################  and book 'Practical Python and OpenCV' below.  ##########################
 
     def BGR2RGB(self):
-        return cv2.cvtColor(self.img, cv2.COLOR_BGR2RGB)
+        image = cv2.cvtColor(self.img, cv2.COLOR_BGR2RGB)
+        return vImg(img=image)
 
     def BGR2RGB(self):
-        return cv2.cvtColor(self.img, cv2.COLOR_RGB2BGR)
+        image = cv2.cvtColor(self.img, cv2.COLOR_RGB2BGR)
+        return vImg(img=image)
+
+    def gray(self):
+        gray = self.copy()
+        cv2.cvtColor(gray, cv2.COLOR_BGR2GRAY)
+        return vImg(img=gray)
 
     def translate(self, x, y):
         """ function that returns translated (shifted by x and y pixels) image
@@ -222,13 +231,13 @@ class vImg(np.ndarray):
         gauss = cv2.GaussianBlur(image, (k,k), 0)
 
         # Next, apply the threshold to the image
-        thresh_bin = cv2.THRESH_BINARY if not inverse else cv2.THRESH_BINARY_INV
+        thresh_bin = cv2.THRESH_BINARY if inverse is not True else cv2.THRESH_BINARY_INV
         thresh = cv2.threshold(gauss, T, 255, thresh_bin)[1]
 
         # Finally, return the result
         return vImg(img=thresh)
 
-    def adaptiveThreshold(self, adaptive_method, neighborhood_size, k = 5, C = 3, inverse = False):
+    def adaptiveThreshold(self, adaptive_method, neighborhood_size, k = 5, C = 0, inverse = False):
         """ We will apply adaptive thresholding to the image object and return a threshold map
         based off of a given neighborhood size.
         adaptive_method   : cv2 constant that represents which adaptive thresholding method we will
@@ -237,15 +246,13 @@ class vImg(np.ndarray):
                             pixels in order to find an optimal value of T to apply thresholding
         k                 : int, kernel size in square pixels for gaussian blur, default to 5
         C                 : int, subtracted from the mean, giving us granular control of the adaptive
-                            thresholding process, default to 3
+                            thresholding process, default to 0
         inverse           : bool, value representing whether or not the threshold constant used will
                             be inverse or normal. Inverse is default since it's commonly used for
                             masking.
         """
         # The value of k must be odd so that there's a center pixel in the matrix
         if k % 2 == 0: raise ValueError(f'k must be an odd number... not {k}')
-
-        image = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
 
         # First, convert the color scale of the image to grayscale, then apply a gaussian blur
         image = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
@@ -254,18 +261,133 @@ class vImg(np.ndarray):
         # Next, apply the threshold to the image
         thresh_bin = cv2.THRESH_BINARY if not inverse else cv2.THRESH_BINARY_INV
 
+        thresh = cv2.adaptiveThreshold(gauss, 255, adaptive_method, thresh_bin, neighborhood_size, C)
+        return vImg(img=thresh)
+
+    def autoCanny(self, sigma=0.33):
+        # compute the median of the single channel pixel intensities
+        v = np.median(self.img)
+
+        # apply automatic Canny edge detection using the computed median
+        lower = int(max(0, (1.0 - sigma) * v))
+        upper = int(min(255, (1.0 + sigma) * v))
+        edged = cv2.Canny(self.img, lower, upper)
+
+        # return the edged image
+        return vImg(img=edged)
+
+    def simpleContours(self, quantity = cv2.RETR_EXTERNAL, complexity = cv2.CHAIN_APPROX_SIMPLE):
+        """Performs simple cv2.findContours operation using common but overridable default 
+           parameters on a vImg object, returns a list of vContour
+        quantity    : cv2.RETR_EXTERNAL (default), also could be: cv2.RETR_LIST, cv2.RETR_COMP, 
+                      and cv2.RETR_TREE
+        complexity  : cv2.CHAIN_APPROX_SIMPLE (default), also could be: cv2.CHAIN_APPROX_NONE
+        """
+        return vContour.fromList(cv2.findContours(self.copy(), quantity, complexity)[1])
+
+    # TODO: Add show function which also calls an atexit.register() to destroy the particular
+    # image once the program terminates
 
 
 def cvtColor(color):
     """Convert RGB to BGR color or vice versa"""
     return color[::-1]
 
+class vContour(np.ndarray):
+    def __new__(cls, cnt):
+        return np.asarray(cnt).view(cls)
 
-if __name__ == '__main__':
-    a = vImg(width=300,height=300)
-    b = vImg('../../images/trex.png')
-    c = b.threshold(215)
-    cv2.imshow('Test1', c)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    def __array_finalize__(self, obj):
+        if obj is None: return
+        self.__x, self.__y, self.__w, self.__h = cv2.boundingRect(obj)
+        self.__x2 = self.__x + self.__w
+        self.__y2 = self.__y + self.__h
+        self.__aspect_ratio = self.__w / self.__h
+        self.__area = cv2.contourArea(self)
+        self.__extent = self.__area / (self.__w * self.__h)
+        self.__hull = cv2.convexHull(self)
+        self.__hull_area = cv2.contourArea(self.__hull)
+        self.__solidity = self.__area / self.__hull_area
+        self.__center = ((self.__x + self.__x2) / 2, (self.__y + self.__y2) / 2)
+
+
+    def __array_wrap__(self, out_arr, context=None):
+        """__array_wrap__ gets called at the end of numpy ufuncs and
+        other numpy functions, to allow a subclass to set the type of
+        the return value and update attributes and metadata"""
+        self.__x, self.__y, self.__w, self.__h = cv2.boundingRect(out_arr)
+        self.__x2 = self.__x + self.__w
+        self.__y2 = self.__y + self.__h
+        self.__aspect_ratio = self.__w / self.__h
+        self.__area = cv2.contourArea(self)
+        self.__extent = self.__area / (self.__w * self.__h)
+        self.__hull = cv2.convexHull(self)
+        self.__hull_area = cv2.contourArea(self.__hull)
+        self.__solidity = self.__area / self.__hull_area
+        # return image
+        return np.ndarray.__array_wrap__(self, out_arr, context)
+
+    @classmethod
+    def fromList(cls, cnts):
+        """ fromList is a classmethod that can be used to return a generator of vContour objects
+            from a list of opencv contours returned from the cv2.findContours method"""
+        if isinstance(cnts, list):
+            return (cls(c) for c in cnts)
+        else:
+            raise ValueError('fromList() constructor requires a list of contours of type nd.array') from None
+    def __eq__(self, other):
+        return True if np.array_equal(self, other) else False
+
+    @property
+    def x(self):
+        return self.__x
+
+    @property
+    def x2(self):
+        return self.__x2
+
+    @property
+    def y(self):
+        return self.__y
+
+    @property
+    def y2(self):
+        return self.__y2
+
+    @property
+    def w(self):
+        return self.__w
+
+    @property
+    def h(self):
+        return self.__h
+
+    @property
+    def center(self):
+        return self.__center
+
+    @property
+    def aspect_ratio(self):
+        return self.__aspect_ratio
+
+    @property
+    def area(self):
+        return self.__area
+
+    @property
+    def extent(self):
+        return self.__extent
+
+    @property
+    def hull(self):
+        return self.__hull
+
+    @property
+    def hull_area(self):
+        return self.__hull_area
+
+    @property
+    def solidity(self):
+        return self.__solidity
+
 
