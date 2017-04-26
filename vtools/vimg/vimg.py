@@ -309,6 +309,7 @@ class vContour(np.ndarray):
         self.__hull_area = cv2.contourArea(self.__hull)
         self.__solidity = self.__area / self.__hull_area
         self.__center = ((self.__x + self.__x2) / 2, (self.__y + self.__y2) / 2)
+        self.__perim = None
 
 
     def __array_wrap__(self, out_arr, context=None):
