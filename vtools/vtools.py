@@ -2,7 +2,7 @@
 I'm saving several tools that seem to get a lot of use into one convenient place to save time on
 lookup and for ease of import.
 These are really just a complete python noob's attempt to gather all the useful tools that I've
-come across so far in my perpetually futile attempts to pass myself off as a half-ass decent
+come across so far in my perpetually futile attempts to pass myself off as a half-assed decent
 programmer.
 """
 import pickle
@@ -18,12 +18,14 @@ import uuid
 ########################################## CLASS HELPERS ###########################################
 
 def gencomment(text, **kwargs):
-    halign = kwargs.get('halign')
-    return '{:#^100}'.format(pad(text))
-
-def pad(text):
-    """Add spaces in front of and behind a string"""
-    return f' {text} '
+    hdict = {'left': '<', 'center': '^', 'right': '>'}
+    halign = hdict.get(kwargs.get('halign','^'))
+    width = kwargs.get('width', 100)
+    text = f' {text} '
+    try:
+        return '{:#{halign}{width}}'.format(text, halign=halign, width=width)
+    except Exception as ex:
+        print(ex)
 
 ####################################################################################################
 ############################################ DECORATORS ############################################
