@@ -217,7 +217,6 @@ class vImg(np.ndarray):
         cv2.INTER_LANCZOS4
         """
         # initialize the dimensions of the image to be resized and grab the image size
-        dim = None
         (h, w) = self.shape[:2]
 
         # if both the width and height are None, then return the original image
@@ -316,23 +315,31 @@ class vImg(np.ndarray):
         """
         return vContour.fromList(cv2.findContours(self.copy(), quantity, complexity)[1])
 
-    def evalContours(self, cnts = None):
+    def evalContours(self, cnts = None, count = None, reversed = False):
         """This function exists to make it easier to evaluate contours in an image. Calling this
         function and supplying a list of contours iterates through the list of contours and
         identifies them one at a time on the image while simultaneously displaying useful
-        simple and advanced contour properties in the console. Very useful for determining if 
-        contour analysis may be used effectively in a given application.
+        simple and advanced contour properties in the console.
         
-        Not generally applicable or useful in a production environment.
+        Very useful for determining if contour analysis may be used effectively in a given 
+        application. Not generally applicable or useful in a production environment.
         
-        cnts : a list of vContour objects (use the simpleContours method to easily generate a list
-               of vContours)
+        cnts     : list of vContour objects, (use the simpleContours method to easily generate a list
+                   of vContours)
+        count    : int, if supplied, the contours will be sorted and count will determine how many
+                   are returned
+        reversed : bool, defaults to False, if set True when called, contours will be sorted in reverse
+                   before being truncated to count number of contours.
         """
 
         if cnts is None:
             cnts = self.simpleContours()
 
         assert hasattr(cnts, '__iter__') and isinstance(cnts[0], vContour), 'Must be iterable of vContours'
+
+        if count is not None:
+            cnts = sorted(cnts, key=cv2.contourArea, reverse=reversed)[:count]
+
         img = self.copy()
 
         for i, c in enumerate(cnts, 1):
@@ -368,7 +375,9 @@ class vImg(np.ndarray):
 ########################################## BEGIN vContour ##########################################
 
 class vContour(np.ndarray):
-    """ The vContour class is a helper class for extending contours identified by opencv"""
+    """ The vContour class is a helper class for extending contours identified by opencv with
+        easily accessed properties for simple to advanced contour analysis
+    """
     def __new__(cls, cnt):
         return np.asarray(cnt).view(cls)
 
@@ -385,6 +394,7 @@ class vContour(np.ndarray):
         self.__hull_area = None
         self.__solidity = None
         self.__center = None
+        self.__approx = None
 
 
 
@@ -402,6 +412,8 @@ class vContour(np.ndarray):
         self.__hull = None
         self.__hull_area = None
         self.__solidity = None
+        self.__center = None
+        self.__approx = None
         # return image
         return np.ndarray.__array_wrap__(self, out_arr, context)
 
@@ -413,6 +425,7 @@ class vContour(np.ndarray):
             return (cls(c) for c in cnts)
         else:
             raise ValueError('fromList() constructor requires a list of contours of type nd.array') from None
+
     def __eq__(self, other):
         return True if np.array_equal(self, other) else False
 
@@ -521,6 +534,10 @@ class vContour(np.ndarray):
     @solidity.setter
     def solidity(self, val):
         self.__solidity = val
+
+    def getApprox(self, epsilon = 0.01):
+        if self.__approx is None:
+            self.approx = cv2.approxPolyDP(self, epsilon * self.perim, True)
 
 ####################################################################################################
 ######################################### HELPER FUNCTIONS #########################################
