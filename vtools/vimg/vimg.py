@@ -63,10 +63,11 @@ class vImg(np.ndarray):
         try:
             obj = np.asarray(cv2.imread(imgFn)).view(cls)
             obj.imgFn = imgFn
-            obj.__h, obj.__w = obj.img.shape[:2]
+            obj.__h, obj.__w = obj.shape[:2]
+        except cv2.error:
+            raise ValueError("OpenCV Error occurred.") from None
         except:
-            raise ValueError("Unable to open file at {}".format(imgFn))
-            return
+            raise ValueError("Unable to open file at {}. Check the file exists.".format(imgFn)) from None
 
         obj.__center = (obj.__w // 2, obj.__h // 2)
         obj.__color = kwargs.get('color', (0, 0, 0))
@@ -313,7 +314,13 @@ class vImg(np.ndarray):
         builder. This is because the first element returned by cv2.findContours is a 'destroyed'
         version of the image passed to it.
         """
-        return vContour.fromList(cv2.findContours(self.copy(), quantity, complexity)[1])
+        try:
+            return vContour.fromList(cv2.findContours(self.copy(), quantity, complexity)[1])
+        except cv2.error:
+            print("\nOpenCV Error: likely tried to use image that has not been thresholded. Continuing "
+                  "operation using autoCanny(). To avoid this message, use the simpleContours() function "
+                  "only on edge maps.\n")
+            vContour.fromList(cv2.findContours(self.autoCanny(), quantity, complexity)[1])
 
     def evalContours(self, cnts = None, count = None, reversed = False):
         """This function exists to make it easier to evaluate contours in an image. Calling this
@@ -365,7 +372,7 @@ class vImg(np.ndarray):
         atexit.register(cv2.destroyAllWindows)
 
     def show(self, title = None, wait = 0):
-        if not title:
+        if title is None:
             title = self.title
         cv2.imshow(title, self)
         cv2.waitKey(wait)
@@ -535,9 +542,21 @@ class vContour(np.ndarray):
     def solidity(self, val):
         self.__solidity = val
 
-    def getApprox(self, epsilon = 0.01):
+    @property
+    def approx(self):
         if self.__approx is None:
-            self.approx = cv2.approxPolyDP(self, epsilon * self.perim, True)
+            print('Error: approximation not yet performed. Please make sure to run getApprox(epsilon) function before '
+                  'attempting to access this property')
+        else:
+            return self.__approx
+
+    @approx.setter
+    def approx(self, val):
+        self.__approx = val
+
+    def getApprox(self, epsilon = 0.01, closed = True):
+        self.approx = cv2.approxPolyDP(self, epsilon * self.perim, closed)
+        return self.approx
 
 ####################################################################################################
 ######################################### HELPER FUNCTIONS #########################################

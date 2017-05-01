@@ -45,21 +45,26 @@ Getting Started
 thresholding (simple binary) an image before vtools.vimg:
 
     # Read in the image
+	
     image = cv2.imread('../images/trex.png')
 
     # Convert to grayscale and apply gaussian blur
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
+	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Set gaussian blur k (size of weighted mean area),
     # must be odd so there's a center pixel
-    k = 3
-    gauss = cv2.GaussianBlur(gray, (k,k), 0)
+    
+	k = 3
+	gauss = cv2.GaussianBlur(gray, (k,k), 0)
 
     # Now set the threshold level, T
-    T = 215
+    
+	T = 215
 
     # Next, apply the threshold to the image
-    thresh = cv2.threshold(gauss, T, 255, cv2.THRESH_BINARY_INV)[1]
+    
+	thresh = cv2.threshold(gauss, T, 255, cv2.THRESH_BINARY_INV)[1]
 
 thresholding (simple binary) an image using vtools.vimg:
 
@@ -77,8 +82,10 @@ calculating contours and evaluating contour properties before vtools.vimg:
     hullImage = np.zeros(gray.shape[:2], dtype="uint8")
 
     # loop over the contours
-    for (i, c) in enumerate(cnts):
-        # compute the area of the contour along with the bounding box
+    
+	for (i, c) in enumerate(cnts):
+        
+		# compute the area of the contour along with the bounding box
         # to compute the aspect ratio
 
         print(f'Contour {i} type({type(c)})')
@@ -88,25 +95,30 @@ calculating contours and evaluating contour properties before vtools.vimg:
 
         # compute the aspect ratio of the contour, which is simply the width
         # divided by the height of the bounding box
-        aspectRatio = w / float(h)
+        
+		aspectRatio = w / float(h)
 
         # use the area of the contour and the bounding box area to compute
         # the extent
-        extent = area / float(w * h)
+        
+		extent = area / float(w * h)
 
         # compute the convex hull of the contour, then use the area of the
         # original contour and the area of the convex hull to compute the
         # solidity
-        hull = cv2.convexHull(c)
+        
+		hull = cv2.convexHull(c)
         hullArea = cv2.contourArea(hull)
         solidity = area / float(hullArea)
 
         # compute the center (tuple)
-        center = ((x + x2) / 2, (self. + y2) / 2)
+        
+		center = ((x + x2) / 2, (self. + y2) / 2)
 
         # visualize the original contours and the convex hull and initialize
         # the name of the shape
-        cv2.drawContours(hullImage, [hull], -1, 255, -1)
+        
+		cv2.drawContours(hullImage, [hull], -1, 255, -1)
         cv2.drawContours(image, [c], -1, (240, 0, 159), 3)
 
         print(f'Shape #{i}: Aspect Ratio is {aspectRatio:.2f}, hull area is {hullArea:.2f}, solidity is {solidity:.2f},
@@ -119,7 +131,8 @@ evaluating contours for usefulness with vtools.vimg:
 
     # outline each contour one by one and print simple and advanced contour properties
     # allowing you to easily determine whether contours may be useful to your CV application
-    image.evalContours()
+    
+	image.evalContours()
 
     # the evalContours() method defaults to using the vImg simpleContours function with default parameters,
     # but you can also supply your own calculated contours value (in the form of a list of vContours)
