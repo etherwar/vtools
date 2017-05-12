@@ -19,7 +19,7 @@ import uuid
 
 def gencomment(text, **kwargs):
     hdict = {'left': '<', 'center': '^', 'right': '>'}
-    halign = hdict.get(kwargs.get('halign','^'))
+    halign = hdict.get(kwargs.get('halign', None), '^')
     width = kwargs.get('width', 100)
     text = f' {text} '
     try:

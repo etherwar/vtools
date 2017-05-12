@@ -6,13 +6,19 @@
 import numpy as np
 import cv2
 import atexit
-from .config import __IDENT__
+from .vcontours import vContour, vContours
+from .config import __IDENT__, cvtColor, eprint
+"""Use cvtColor(3-tuple) to reverse the order of a BGR or RGB tuple"""
 from .colors import *
+"""WHITE, BLACK, RED, GREEN, BLUE, AQUA, MAROON, FUCHSIA, OLIVE, NAVY, TEAL, PURPLE, YELLOW"""
 
 
 ####################################################################################################
 ############################################# CLASSES ##############################################
 class vImg(np.ndarray):
+    # TODO: Contemplate __str__ and __repr__ functionality
+    # TODO: Continue developing useful analysis functions
+
     def __new__(cls, imgFn=None, **kwargs):
         """Initiates a vImg object using np.ndarray as base class. The vImg object extends the array
         to allow for some basic image modification methods to be executed on the base class.
@@ -57,7 +63,7 @@ class vImg(np.ndarray):
                             else 'width ' if not kwargs.get('width', None)
                             else 'unknown property ')
                 str_err += 'must be provided (color is optional).'
-                print(str_err)
+                eprint(str_err)
                 return
 
         try:
@@ -84,9 +90,6 @@ class vImg(np.ndarray):
 
         if self.__title is None:
             self.__title = 'img' + next(__IDENT__)
-
-
-
 
     def __array_wrap__(self, out_arr, context=None):
         """__array_wrap__ gets called at the end of numpy ufuncs and
@@ -128,14 +131,14 @@ class vImg(np.ndarray):
         return self.__h
 
     @height.setter
-    def h(self, val):
+    def height(self, val):
         self.__h = val
 
     @property
     def width(self):
         return self.__w
 
-    @w.setter
+    @width.setter
     def width(self, val):
         self.__w = val
 
@@ -163,6 +166,7 @@ class vImg(np.ndarray):
     @title.setter
     def title(self, val):
         assert isinstance(val,str), 'Title must be of type string'
+        self.__title = val
 
     ####################################################################################################
     ########################## Reused some of Dr. Adrian Rosebrock's code and ##########################
@@ -173,14 +177,13 @@ class vImg(np.ndarray):
         image = cv2.cvtColor(self.copy(), cv2.COLOR_BGR2RGB)
         return vImg(img=image)
 
-    def BGR2RGB(self):
+    def RGB2BGR(self):
         image = cv2.cvtColor(self.copy(), cv2.COLOR_RGB2BGR)
         return vImg(img=image)
 
     def gray(self):
         """ function that returns a grayscale copy of the vImg object """
-        gray = self.copy()
-        cv2.cvtColor(gray, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(self.copy(), cv2.COLOR_BGR2GRAY)
         return vImg(img=gray)
 
     def translate(self, x, y):
@@ -311,18 +314,21 @@ class vImg(np.ndarray):
         complexity  : cv2.CHAIN_APPROX_SIMPLE (default), also could be: cv2.CHAIN_APPROX_NONE
         
         Passes the second element returned from cv2.findContours to the vContour class's fromList
-        builder. This is because the first element returned by cv2.findContours is a 'destroyed'
-        version of the image passed to it.
+        builder. Returns a vContours list of vContour objects. 
+        
+        Returns the 2nd element because the first element returned by cv2.findContours is 
+        a 'destroyed' version of the image passed to it.
         """
         try:
             return vContour.fromList(cv2.findContours(self.copy(), quantity, complexity)[1])
         except cv2.error:
-            print("\nOpenCV Error: likely tried to use image that has not been thresholded. Continuing "
-                  "operation using autoCanny(). To avoid this message, use the simpleContours() function "
-                  "only on edge maps.\n")
-            vContour.fromList(cv2.findContours(self.autoCanny(), quantity, complexity)[1])
+            eprint("\nOpenCV Error: likely tried to use image that has not been thresholded. \n"
+                  "Now attempting to continue this operation using autoCanny(). \n"
+                  "To avoid this error message, pass only edge maps to the simpleContours() function,\n"
+                  "e.g. vImg('test.png').autoCanny().simpleContours()\n")
+            return vContour.fromList(cv2.findContours(self.autoCanny(), quantity, complexity)[1])
 
-    def evalContours(self, cnts = None, count = None, reversed = False):
+    def evalContours(self, cnts = None, count = None, reverse = False, outline_color = GREEN, font_color = WHITE):
         """This function exists to make it easier to evaluate contours in an image. Calling this
         function and supplying a list of contours iterates through the list of contours and
         identifies them one at a time on the image while simultaneously displaying useful
@@ -331,42 +337,40 @@ class vImg(np.ndarray):
         Very useful for determining if contour analysis may be used effectively in a given 
         application. Not generally applicable or useful in a production environment.
         
-        cnts     : list of vContour objects, (use the simpleContours method to easily generate a list
-                   of vContours)
-        count    : int, if supplied, the contours will be sorted and count will determine how many
-                   are returned
-        reversed : bool, defaults to False, if set True when called, contours will be sorted in reverse
-                   before being truncated to count number of contours.
+        cnts          : vContours object (list of vContour), use the simpleContours method to easily generate
+                        a vContours object
+        count         : int, if supplied, the contours will be sorted and count will determine how many
+                        are returned
+        reversed      : bool, defaults to False, if set True when called, contours will be sorted in reverse
+                        before being truncated to count number of contours.
+        outline_color : tuple (3 unsigned 8-bit integers), 3-tuple indicating color of outline in RGB format
+        font_color    : tuple (3 unsigned 8-bit integers), 3-tuple indicating color of label text in RGB format
         """
 
         if cnts is None:
             cnts = self.simpleContours()
 
-        assert hasattr(cnts, '__iter__') and isinstance(cnts[0], vContour), 'Must be iterable of vContours'
+        assert hasattr(cnts, '__iter__') and isinstance(cnts, vContours), 'Must be vContours iterable'
 
         if count is not None:
-            cnts = sorted(cnts, key=cv2.contourArea, reverse=reversed)[:count]
+            cnts.sizeSort(reverse=reverse)
+            cnts = cnts[:count]
 
         img = self.copy()
 
         for i, c in enumerate(cnts, 1):
-            cv2.drawContours(img, [c], -1, WHITE, 1)
-            cv2.putText(img, f'#{i}', (c.x, c.y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, cvtColor(YELLOW), 2)
-            print("""Shape #{i} @ x({x1},{x2}) y({y1}, {y2})
+            cv2.drawContours(img, [c], -1, cvtColor(outline_color), 1)
+            cv2.putText(img, f'#{i}', (c.x, c.y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, cvtColor(font_color), 2)
+            print(f"""Shape #{i} @ x({c.x},{c.x2}) y({c.y}, {c.y2})
             --------------------------------------------------------------
-            width: {width} height: {height}
-            Aspect Ratio is (image width / image height): {aspect_ratio:.2f}
-            Contour Area is: {area:.2f}
-            Bounding Box Area is: {bbarea:.2f}
-            Convex Hull Area is: {hull_area:.2f}
-            Solidity (Contour Area / Convex Hull Area) is: {solidity:.2f} 
-            Extent (Contour Area / Bounding Box Area) is: {extent:.2f}
-            Center is located at: {center}""".format(i=i, x1=c.x, x2=c.x2, width=c.width, y1=c.y, y2=c.y2,
-                                                     height=c.height,
-                                                     aspect_ratio=c.aspect_ratio, area=c.area,
-                                                     bbarea=c.width * c.height,
-                                                     hull_area=c.hull_area, solidity=c.solidity, extent=c.extent,
-                                                     center=c.center))
+            width: {c.width} height: {c.height}
+            Aspect Ratio is (image width / image height): {c.aspect_ratio:.2f}
+            Contour Area is: {c.area:.2f}
+            Bounding Box Area is: {c.w * c.h:.2f}
+            Convex Hull Area is: {c.hull_area:.2f}
+            Solidity (Contour Area / Convex Hull Area) is: {c.solidity:.2f} 
+            Extent (Contour Area / Bounding Box Area) is: {c.extent:.2f}
+            Center is located at: {c.center}""")
             cv2.imshow(self.title, img)
             cv2.waitKey(0)
         atexit.register(cv2.destroyAllWindows)
@@ -378,189 +382,8 @@ class vImg(np.ndarray):
         cv2.waitKey(wait)
         atexit.register(cv2.destroyAllWindows)
 
-####################################################################################################
-########################################## BEGIN vContour ##########################################
-
-class vContour(np.ndarray):
-    """ The vContour class is a helper class for extending contours identified by opencv with
-        easily accessed properties for simple to advanced contour analysis
-    """
-    def __new__(cls, cnt):
-        return np.asarray(cnt).view(cls)
-
-    def __array_finalize__(self, obj):
-        if obj is None: return
-        self.__x, self.__y, self.__w, self.__h = cv2.boundingRect(obj)
-        self.__x2 = self.__x + self.__w
-        self.__y2 = self.__y + self.__h
-        self.__aspect_ratio = self.__w / self.__h
-        self.__perim = None
-        self.__area = None
-        self.__extent = None
-        self.__hull = None
-        self.__hull_area = None
-        self.__solidity = None
-        self.__center = None
-        self.__approx = None
 
 
 
-    def __array_wrap__(self, out_arr, context=None):
-        """__array_wrap__ gets called at the end of numpy ufuncs and
-        other numpy functions, to allow a subclass to set the type of
-        the return value and update attributes and metadata"""
-        self.__x, self.__y, self.__w, self.__h = cv2.boundingRect(out_arr)
-        self.__x2 = self.__x + self.__w
-        self.__y2 = self.__y + self.__h
-        self.__aspect_ratio = self.__w / self.__h
-        self.__perim = None
-        self.__area = None
-        self.__extent = None
-        self.__hull = None
-        self.__hull_area = None
-        self.__solidity = None
-        self.__center = None
-        self.__approx = None
-        # return image
-        return np.ndarray.__array_wrap__(self, out_arr, context)
 
-    @classmethod
-    def fromList(cls, cnts):
-        """ fromList is a classmethod that can be used to return a generator of vContour objects
-            from a list of opencv contours returned from the cv2.findContours method"""
-        if isinstance(cnts, list):
-            return (cls(c) for c in cnts)
-        else:
-            raise ValueError('fromList() constructor requires a list of contours of type nd.array') from None
 
-    def __eq__(self, other):
-        return True if np.array_equal(self, other) else False
-
-    @property
-    def x(self):
-        return self.__x
-
-    @property
-    def x2(self):
-        return self.__x2
-
-    @property
-    def y(self):
-        return self.__y
-
-    @property
-    def y2(self):
-        return self.__y2
-
-    @property
-    def w(self):
-        return self.__w
-
-    @property
-    def h(self):
-        return self.__h
-
-    @property
-    def width(self):
-        return self.__w
-
-    @property
-    def height(self):
-        return self.__h
-
-    @property
-    def center(self):
-        if self.__center is None:
-            self.center = ((self.__x + self.__x2) / 2, (self.__y + self.__y2) / 2)
-        return self.__center
-
-    @center.setter
-    def center(self, val):
-        self.__center = val
-
-    @property
-    def aspect_ratio(self):
-        return self.__aspect_ratio
-
-    @property
-    def perim(self):
-        if self.__perim is None:
-            self.perim = cv2.arcLength(self, True)
-        return self.__perim
-
-    @perim.setter
-    def perim(self, val):
-        self.__perim = val
-
-    @property
-    def area(self):
-        if self.__area is None:
-            self.area = cv2.contourArea(self)
-        return self.__area
-
-    @area.setter
-    def area(self, val):
-        self.__area = val
-
-    @property
-    def extent(self):
-        if self.__extent is None:
-            self.extent = self.area / (self.width * self.height)
-        return self.__extent
-
-    @extent.setter
-    def extent(self, val):
-        self.__extent = val
-
-    @property
-    def hull(self):
-        if self.__hull is None:
-            self.hull = cv2.convexHull(self)
-        return self.__hull
-
-    @hull.setter
-    def hull(self, val):
-        self.__hull = val
-
-    @property
-    def hull_area(self):
-        if self.__hull_area is None:
-            self.hull_area = cv2.contourArea(self.hull)
-        return self.__hull_area
-
-    @hull_area.setter
-    def hull_area(self, val):
-        self.__hull_area = val
-
-    @property
-    def solidity(self):
-        if self.__solidity is None:
-            self.solidity = self.area / self.hull_area
-        return self.__solidity
-
-    @solidity.setter
-    def solidity(self, val):
-        self.__solidity = val
-
-    @property
-    def approx(self):
-        if self.__approx is None:
-            print('Error: approximation not yet performed. Please make sure to run getApprox(epsilon) function before '
-                  'attempting to access this property')
-        else:
-            return self.__approx
-
-    @approx.setter
-    def approx(self, val):
-        self.__approx = val
-
-    def getApprox(self, epsilon = 0.01, closed = True):
-        self.approx = cv2.approxPolyDP(self, epsilon * self.perim, closed)
-        return self.approx
-
-####################################################################################################
-######################################### HELPER FUNCTIONS #########################################
-
-def cvtColor(color):
-    """Convert RGB to BGR color or vice versa"""
-    return color[::-1]
