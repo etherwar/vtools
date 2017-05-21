@@ -13,17 +13,45 @@ import os.path
 import re
 import unicodedata
 import uuid
+import sys
+from pyperclip import copy
 
 ####################################################################################################
 ########################################## CLASS HELPERS ###########################################
 
-def gencomment(text, **kwargs):
+def header(text, **kwargs):
+
     hdict = {'left': '<', 'center': '^', 'right': '>'}
-    halign = hdict.get(kwargs.get('halign', None), '^')
-    width = kwargs.get('width', 100)
-    text = f' {text} '
+
+    halign = hdict.get(kwargs.get('halign', None), '^') # get halign kwarg (defaults to ^ for center)
+    width = kwargs.get('width', 100)                    # get width kwarg (defaults to 100 chrs wide)
+    pad = kwargs.get('pad', True)                       # get padding kwarg (defaults to True)
+    header = kwargs.get('header', False)                # get header kwarg (defaults to False)
+    char = kwargs.get('char', '#')                      # get char kwarg (defaults to '#')
+    clip = kwargs.get('clip', True)                     # get clip kwarg (defaults to True)
+
+    if pad:
+        text = f' {text} '
+
+    if char != '#':
+        text = f'# {text}'
+
+    text = f'{text:{char}{halign}{width}}'
+
+    if header:
+        adder = '' if char == '#' else '# ' # account for other chrs being used as repeating character
+        text = f'{adder}{char*width}\n{text}' # add header line to the comment
+
     try:
-        return '{:#{halign}{width}}'.format(text, halign=halign, width=width)
+        if char != '#':
+            width -= 2
+
+        if clip:
+            copy(text)
+            print('Text copied to clipboard.')
+
+        return f'{text}'
+
     except Exception as ex:
         print(ex)
 
@@ -194,6 +222,9 @@ def flatten(aList):
     return ([aList] if not(type(aList) == list)
             else aList if len(aList) == 0
             else flatten(aList[0]) + flatten(aList[1:]))
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 ####################################################################################################
 ############################################## TREES ###############################################

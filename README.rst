@@ -16,7 +16,7 @@ written in his 'imutils' package located here: https://pypi.python.org/pypi/imut
 
 The goal of this package is to integrate these tools into an object oriented interface that extends
 the np.ndarray class with methods and properties to create an even simpler image manipulation and
-analysis tool that what Dr. Rosebrock's imutils package provides.
+analysis interface than what Dr. Rosebrock's imutils package provides.
 
 
 Dependencies
@@ -71,7 +71,8 @@ thresholding (simple binary) an image using vtools.vimg:
     image = vImg('../images/trex.png')
     thresh = image.threshold(215)
 
-note: currently the only required variable is for T, but k (defaults to 5) and inverse (bool, defaults to True) are also available as named parameters.
+note: currently the only required variable is for T, but k (defaults to 5) and
+inverse (bool, defaults to True) are also available as named parameters.
 
 The vContour class:
 
@@ -121,18 +122,18 @@ calculating contours and evaluating contour properties before vtools.vimg:
 		cv2.drawContours(hullImage, [hull], -1, 255, -1)
         cv2.drawContours(image, [c], -1, (240, 0, 159), 3)
 
-        print(f'Shape #{i}: Aspect Ratio is {aspectRatio:.2f}, hull area is {hullArea:.2f}, solidity is {solidity:.2f},
-        extent is {extent:.2f}, center is {center}')
+        print(f'Shape #{i}: Aspect Ratio is {aspectRatio:.2f}, hull area is {hullArea:.2f}, '
+        f'solidity is {solidity:.2f}, extent is {extent:.2f}, center is {center}')
 
 
 evaluating contours for usefulness with vtools.vimg:
 
-    image = vImg("images/receipt.png")
+    img = vImg("images/test.png")
 
     # outline each contour one by one and print simple and advanced contour properties
     # allowing you to easily determine whether contours may be useful to your CV application
     
-	image.evalContours()
+	img.gray().evalContours()
 
     # the evalContours() method defaults to using the vImg simpleContours function with default parameters,
     # but you can also supply your own calculated contours value (in the form of a list of vContours)

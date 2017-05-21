@@ -5,7 +5,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 version_path = os.path.join(here, 'vtools/version.txt')
 version = open(version_path).read().strip()
 
-requires = [ 'opencv-python>=3.0', 'numpy' ]
+requires = [ 'opencv-python>=3.0', 'numpy', 'pyperclip>=1.5' ]
 
 CLASSIFIERS = [
     'Development Status :: 3 - Alpha',
@@ -37,7 +37,7 @@ setup(
       license='MIT',
       keywords=['vtools', 'vimg' 'image processing', 'image', 'processing', 'BFS', 'DFS', 'Memoize', 'Tree'],
       url='https://github.com/etherwar/vtools',
-      download_url='https://github.com/etherwar/vtools4/archive/vtools-0-0-2.tar.gz',
+      download_url='https://github.com/etherwar/vtools/archive/master.zip',
       zip_safe=False,
       packages=find_packages(exclude=['docs', 'examples', 'tests']),
       install_requires=requires,

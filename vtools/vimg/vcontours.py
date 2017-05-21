@@ -102,9 +102,14 @@ class vContour(np.ndarray):
             # compute the moments of the contour which can be used to compute the
             # centroid or "center of mass" of the region
             M = cv2.moments(self)
-            cX = int(M["m10"] / M["m00"])
-            cY = int(M["m01"] / M["m00"])
-            self.center = (cX, cY)
+            if M["m00"] == 0:
+                eprint("Can't calculate center of mass because m00 moment is zero. "
+                       "Instead returning center of bounding box")
+                self.center = (int((self.x + self.x2)/2), int((self.y + self.y2)/2))
+            else:
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                self.center = (cX, cY)
         return self.__center
 
     @center.setter
@@ -168,7 +173,11 @@ class vContour(np.ndarray):
     @property
     def solidity(self):
         if self.__solidity is None:
-            self.solidity = self.area / self.hull_area
+            if self.hull_area == 0:
+                eprint("Can't calculate solidity as hull_area is zero.")
+                self.solidity = -1
+            else:
+                self.solidity = self.area / self.hull_area
         return self.__solidity
 
     @solidity.setter
