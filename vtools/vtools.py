@@ -1,4 +1,6 @@
 """
+Author: Vic Jackson
+
 I'm saving several tools that seem to get a lot of use into one convenient place to save time on
 lookup and for ease of import.
 These are really just a complete python noob's attempt to gather all the useful tools that I've
@@ -16,10 +18,20 @@ import uuid
 import sys
 from pyperclip import copy
 
+
 ####################################################################################################
 ########################################## CLASS HELPERS ###########################################
 
-def header(text, **kwargs):
+def header(text, **kwargs) -> str:
+    """
+    
+    :param text: 
+    :type text: 
+    :param kwargs: 
+    :type kwargs: 
+    :return: 
+    :rtype: str
+    """
 
     hdict = {'left': '<', 'center': '^', 'right': '>'}
 
