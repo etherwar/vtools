@@ -5,7 +5,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 version_path = os.path.join(here, 'vtools/version.txt')
 version = open(version_path).read().strip()
 
-requires = [ 'opencv-python>=3.0', 'numpy', 'pyperclip>=1.5' ]
+requires = [ 'opencv-python>=3.0', 'numpy', 'pyperclip>=1.5', 'matplotlib>=2.0.0' ]
 
 CLASSIFIERS = [
     'Development Status :: 3 - Alpha',
@@ -16,6 +16,7 @@ CLASSIFIERS = [
     'Operating System :: Linux',
     'Operating System :: Windows',
     'Topic :: Software Development :: Libraries :: Python Modules',
+    'Topic :: Multimedia :: Images',
     'Topic :: Multimedia :: Video',
     'Topic :: Utilities',
     "Programming Language :: Python",
@@ -35,7 +36,7 @@ setup(
       maintainer='Vic Jackson',
       maintainer_email='mr.vic.jackson@gmail.com',
       license='MIT',
-      keywords=['vtools', 'vimg' 'image processing', 'image', 'processing', 'BFS', 'DFS', 'Memoize', 'Tree'],
+      keywords=['vtools', 'vimg', 'OpenCV', 'image analysis', 'image processing', 'image', 'processing', 'BFS', 'DFS', 'Memoize', 'Tree'],
       url='https://github.com/etherwar/vtools',
       download_url='https://github.com/etherwar/vtools/archive/master.zip',
       zip_safe=False,

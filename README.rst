@@ -42,7 +42,7 @@ You should clone this repository and run setup.py::
 Getting Started
 ---------------
 
-thresholding (simple binary) an image before vtools.vimg:
+thresholding (simple binary) an image before vtools' vImg class:
 
     # Read in the image
 	
@@ -66,7 +66,7 @@ thresholding (simple binary) an image before vtools.vimg:
     
 	thresh = cv2.threshold(gauss, T, 255, cv2.THRESH_BINARY_INV)[1]
 
-thresholding (simple binary) an image using vtools.vimg:
+thresholding (simple binary) an image using vtools.vImg:
 
     image = vImg('../images/trex.png')
     thresh = image.threshold(215)
@@ -126,7 +126,7 @@ calculating contours and evaluating contour properties before vtools.vimg:
         f'solidity is {solidity:.2f}, extent is {extent:.2f}, center is {center}')
 
 
-evaluating contours for usefulness with vtools.vimg:
+Evaluating contours for usefulness with vtools' vImg, vContour, and vContours classes:
 
     img = vImg("images/test.png")
 
@@ -137,3 +137,5 @@ evaluating contours for usefulness with vtools.vimg:
 
     # the evalContours() method defaults to using the vImg simpleContours function with default parameters,
     # but you can also supply your own calculated contours value (in the form of a list of vContours)
+
+Histograms with vtools' vImg

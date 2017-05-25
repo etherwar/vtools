@@ -4,6 +4,9 @@
 ####################################################################################################
 import sys
 
+# We import pyplot from matplotlib on an as-needed basis, so we import importlib's import_module here
+from importlib import import_module
+
 """ Here is where I have placed all the necessary helper functions """
 def _idGen():
     num = 0
@@ -19,3 +22,11 @@ def cvtColor(color):
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+def import_pyplot():
+    plt = import_module('matplotlib.pyplot')
+    return plt
+
+
+
+

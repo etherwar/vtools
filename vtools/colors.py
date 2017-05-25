@@ -24,7 +24,7 @@ class vColor(tuple):
         if len(args) == 3:
             color_tup = tuple(e for e in args) if not BGR else tuple(e for e in args)[::-1]
         elif len(args) == 1 and hasattr(args[0], '__iter__') and len(list(args[0])) == 3:
-            color_tup = tuple(args) if not BGR else tuple(args)[::-1]
+            color_tup = tuple(args[0]) if not BGR else tuple(args[0])[::-1]
         else:
             eprint("\n\nA tuple or iterable in RGB integer format. May be in BGR if "
                    "you specify BGR = True as a parameter.\n\n")
@@ -39,7 +39,7 @@ class vColor(tuple):
         if len(args) == 3:
             color_tup = tuple(e for e in args) if not BGR else tuple(e for e in args)[::-1]
         elif len(args) == 1 and hasattr(args[0], '__iter__') and len(list(args[0])) == 3:
-            color_tup = tuple(args) if not BGR else tuple(args)[::-1]
+            color_tup = tuple(args[0]) if not BGR else tuple(args[0])[::-1]
 
         self._r, self._g, self._b = color_tup
         self._RGB = not BGR
