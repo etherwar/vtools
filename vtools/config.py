@@ -5,6 +5,9 @@
 import sys
 
 # We import some modules on an as-needed basis using importlib's import_module
+
+# We import pyplot from matplotlib on an as-needed basis, so we import importlib's import_module here
+
 from importlib import import_module
 
 """ Here is where I have placed all the necessary helper functions """
@@ -26,9 +29,5 @@ def eprint(*args, **kwargs):
 def import_pyplot():
     plt = import_module('matplotlib.pyplot')
     return plt
-
-
-
-
 
 

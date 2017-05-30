@@ -242,7 +242,7 @@ class vImg(np.ndarray):
         shifted = cv2.warpAffine(self, M, (self.shape[1], self.shape[0]))
         # Return the translated image
         return vImg(img=shifted)
-    
+
     def rotate(self, angle = 90, center = None, scale = 1.0):
 
         if not center: center = self.center
@@ -252,7 +252,7 @@ class vImg(np.ndarray):
 
         # Return the rotated image
         return vImg(img=rotated)
-    
+
     def resize(self, width = None, height = None, interpolation = cv2.INTER_AREA):
         """ function that returns a resized image based on a given width, height, or both.
         Maintains the aspect ratio of the image if given only one dimension.
