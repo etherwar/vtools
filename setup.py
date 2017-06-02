@@ -1,11 +1,11 @@
-import os
+# import os
 from setuptools import setup, find_packages
 
-here = os.path.abspath(os.path.dirname(__file__))
-version_path = os.path.join(here, 'vtools/version.txt')
-version = open(version_path).read().strip()
+# here = os.path.abspath(os.path.dirname(__file__))
+# version_path = os.path.join(here, 'version.txt')
+# version = open(version_path).read().strip()
 
-requires = [ 'opencv-python>=3.0', 'numpy', 'pyperclip>=1.5', 'matplotlib>=2.0.0' ]
+requires = [ 'opencv-python>=3.0', 'numpy', 'pyperclip>=1.5.0', 'matplotlib>=2.0.0' ]
 
 CLASSIFIERS = [
     'Development Status :: 3 - Alpha',
@@ -28,8 +28,8 @@ CLASSIFIERS = [
 
 setup(
       name='vtools',
-      version=version,
-      description='Tools that I use frequently - Vic\'s Tools',
+      version='0.0.27',
+      description='Visual Tools - an object oriented approach to image processing and analysis',
       long_description=open('README.rst', 'r').read(),
       author='Vic Jackson',
       author_email='mr.vic.jackson@gmail.com',
