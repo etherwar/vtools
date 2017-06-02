@@ -43,7 +43,7 @@ CLASSIFIERS = [
 
 setup(
       name='vtools',
-      version='0.0.28',
+      version='0.0.29',
       description='Visual Tools - an object oriented approach to image processing and analysis. Requires OpenCV 3.0+',
       long_description=open('README.rst', 'r').read(),
       author='Vic Jackson',
