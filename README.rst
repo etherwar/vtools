@@ -1,37 +1,40 @@
 vtools
 ============
 
-vimg README rev.0 2017/3/11
-This library is a project that is the result of my venture into the realm of computer vision.
+vimg README rev.001 2017/6/02
+This library is a project that is the result of my foray into the realm of computer vision.
 This project is a direct result of exploring and thinking about a highly simple and intuitive
-way to create an image object, and then easily be able to perform a powerful set of methods and
-alterations to that object, making routine tasks like thresholding and contouring a more simple
-and Object-oriented endeavor.
+way to create an image object, and then easily be able to perform a powerful set of
+methodological analyses on that object, making routine tasks like thresholding and contouring
+a simple endeavor following an object oriented approach.
 
-I want to pay complete homage to Dr. Adrian Rosebrock in every way for the content of this package.
+I want to pay complete homage to Dr. Adrian Rosebrock in many ways for the content of this package.
 His website is http://www.pyimagesearch.com/ . I've read his book and his blog posts about OpenCV
 for a long time and this package is a direct result from the knowledge that I have gained while
-and since doing so. This package borrows logic, code, and even comments that Dr. Rosebrock has
+and since doing so. This package borrows/adapts some of the work that Dr. Rosebrock has
 written in his 'imutils' package located here: https://pypi.python.org/pypi/imutils
 
-The goal of this package is to integrate these tools into an object oriented interface that extends
-the np.ndarray class with methods and properties to create an even simpler image manipulation and
-analysis interface than what Dr. Rosebrock's imutils package provides.
+The goal of this package is to integrate these tools into an object oriented interface that
+extends the np.ndarray class with methods and properties to create a simple image manipulation
+and analysis interface similar to the functional interface that Dr. Rosebrock's imutils package
+provides.
 
 
 Dependencies
 ------------
-OpenCV 3.0+
-Python 3.6+
+OpenCV 3.0+ (required)
+Python 3.6+ (required)
+matplotlib (tested with 2+, required to view histograms)
 
 
 Install vtools
 --------------------
 **From Source**
 
-You should clone this repository and run setup.py::
+You should be able to clone this repository in to a directory (ex: vtools) and run setup.py:
 
     cd vtools && python setup.py install
+
 
 **From PyPI**
 
