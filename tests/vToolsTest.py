@@ -1,4 +1,5 @@
-from vTools.vTools import Tree, _WIDTH, _DEPTH
+from vtools import Tree, _WIDTH, _DEPTH, imgPaths
+import os
 
 def test_tree():
 
@@ -21,3 +22,20 @@ def test_tree():
     for node in tree.expand_tree("harry", mode=_WIDTH):
         print(node)
     print("="*80)
+
+class vtools_testSuite:
+    """ Class for vtools testSuite. Broke testing units into classes because it made
+        sense
+
+
+    """
+    def __init__(self):
+        self.tests = (self.test_imgPaths,)
+
+    def __call__(self):
+        for test in self.tests:
+            test()
+
+    def test_imgPaths(self):
+        for e in imgPaths(recursive=True):
+            if r"E:\OneDrive\Code\test2.png" == e: print("[+] (None, Default, True) Same folder test passed")

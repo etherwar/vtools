@@ -2,13 +2,22 @@
 ########################################### vtools.vimg ############################################
 ############################################ config.py #############################################
 ####################################################################################################
-import sys
+############################################  Imports  #############################################
+
+####################################################################################################
+########################################### __version__ ############################################
+
+__version__ = '0.0.31'
+
+####################################################################################################
+############################################# __all__ ##############################################
+
+__all__ = ('vImg', 'vContour', 'vContours', 'vColor', 'memoized', 'Memorize', 'flatten',
+           'sanitize_id', 'Node', 'Tree', 'header', 'eprint', '__IDENT__')
 
 # We import some modules on an as-needed basis using importlib's import_module
 
 # We import pyplot from matplotlib on an as-needed basis, so we import importlib's import_module here
-
-from importlib import import_module
 
 """ Here is where I have placed all the necessary helper functions """
 def _idGen():
@@ -19,15 +28,6 @@ def _idGen():
 
 __IDENT__ = _idGen()
 
-def cvtColor(color):
-    """Convert RGB tuple to BGR color tuple or vice versa"""
-    return color[::-1]
 
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-
-def import_pyplot():
-    plt = import_module('matplotlib.pyplot')
-    return plt
 
 

@@ -3,7 +3,7 @@
 ############################################ colors.py #############################################
 ####################################################################################################
 ######################################### COLORS (in RGB) ##########################################
-from .config import eprint
+from .vtools import eprint
 
 class vColor(tuple):
     """ The vColor class is here to easily create RGB or BGR colors.
@@ -55,6 +55,9 @@ class vColor(tuple):
 
     def isRGB(self):
         return self._RGB
+
+    def isBGR(self):
+        return not self._RGB
 
 WHITE   = vColor(255,255,255)
 BLACK   = vColor(0,0,0)

@@ -1,7 +1,7 @@
 vtools
 ============
 
-vimg README rev.001 2017/6/02
+vimg README rev.002 2017/6/02
 This library is a project that is the result of my foray into the realm of computer vision.
 This project is a direct result of exploring and thinking about a highly simple and intuitive
 way to create an image object, and then easily be able to perform a powerful set of
@@ -24,7 +24,8 @@ Dependencies
 ------------
 OpenCV 3.0+ (required)
 Python 3.6+ (required)
-matplotlib (tested with 2+, required to view histograms)
+Mahotas (required)
+matplotlib (tested with 2+, required to visualize histograms)
 
 
 Install vtools
@@ -48,26 +49,26 @@ Getting Started
 thresholding (simple binary) an image before vtools' vImg class:
 
     # Read in the image
-	
+
     image = cv2.imread('../images/trex.png')
 
     # Convert to grayscale and apply gaussian blur
     
-	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Set gaussian blur k (size of weighted mean area),
     # must be odd so there's a center pixel
     
-	k = 3
-	gauss = cv2.GaussianBlur(gray, (k,k), 0)
+    k = 3
+    gauss = cv2.GaussianBlur(gray, (k,k), 0)
 
     # Now set the threshold level, T
     
-	T = 215
+    T = 215
 
     # Next, apply the threshold to the image
     
-	thresh = cv2.threshold(gauss, T, 255, cv2.THRESH_BINARY_INV)[1]
+    thresh = cv2.threshold(gauss, T, 255, cv2.THRESH_BINARY_INV)[1]
 
 thresholding (simple binary) an image using vtools.vImg:
 
@@ -87,9 +88,9 @@ calculating contours and evaluating contour properties before vtools.vimg:
 
     # loop over the contours
     
-	for (i, c) in enumerate(cnts):
+    for (i, c) in enumerate(cnts):
         
-		# compute the area of the contour along with the bounding box
+        # compute the area of the contour along with the bounding box
         # to compute the aspect ratio
 
         print(f'Contour {i} type({type(c)})')
@@ -100,29 +101,29 @@ calculating contours and evaluating contour properties before vtools.vimg:
         # compute the aspect ratio of the contour, which is simply the width
         # divided by the height of the bounding box
         
-		aspectRatio = w / float(h)
+        aspectRatio = w / float(h)
 
         # use the area of the contour and the bounding box area to compute
         # the extent
         
-		extent = area / float(w * h)
+        extent = area / float(w * h)
 
         # compute the convex hull of the contour, then use the area of the
         # original contour and the area of the convex hull to compute the
         # solidity
         
-		hull = cv2.convexHull(c)
+        hull = cv2.convexHull(c)
         hullArea = cv2.contourArea(hull)
         solidity = area / float(hullArea)
 
         # compute the center (tuple)
         
-		center = ((x + x2) / 2, (self. + y2) / 2)
+        center = ((x + x2) / 2, (self. + y2) / 2)
 
         # visualize the original contours and the convex hull and initialize
         # the name of the shape
         
-		cv2.drawContours(hullImage, [hull], -1, 255, -1)
+        cv2.drawContours(hullImage, [hull], -1, 255, -1)
         cv2.drawContours(image, [c], -1, (240, 0, 159), 3)
 
         print(f'Shape #{i}: Aspect Ratio is {aspectRatio:.2f}, hull area is {hullArea:.2f}, '
@@ -136,9 +137,11 @@ Evaluating contours for usefulness with vtools' vImg, vContour, and vContours cl
     # outline each contour one by one and print simple and advanced contour properties
     # allowing you to easily determine whether contours may be useful to your CV application
     
-	img.gray().evalContours()
+    img.gray().evalContours()
 
     # the evalContours() method defaults to using the vImg simpleContours function with default parameters,
-    # but you can also supply your own calculated contours value (in the form of a list of vContours)
+    # but you can also supply your own calculated contour values (in the form of a list of vContours)
 
 Histograms with vtools' vImg
+
+*** Coming Soon! ***

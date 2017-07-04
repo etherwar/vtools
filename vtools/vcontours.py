@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
-from .config import eprint
-
+from .vtools import eprint
+from typing import List, Dict, Tuple
 
 ####################################################################################################
 ########################################## BEGIN vContour ##########################################
@@ -10,6 +10,10 @@ class vContour(np.ndarray):
     """ The vContour class is a helper class for extending contours identified by opencv with
         easily accessed properties for simple to advanced contour analysis
     """
+
+    ####################################################################################################
+    ######################################### DUNDER FUNCTIONS #########################################
+
     def __new__(cls, cnt):
         return np.asarray(cnt).view(cls)
 
@@ -30,6 +34,7 @@ class vContour(np.ndarray):
         self.__solidity = None
         self.__center = None
         self.__approx = None
+        self.__min_radius = None
 
 
 
@@ -49,8 +54,12 @@ class vContour(np.ndarray):
         self.__solidity = None
         self.__center = None
         self.__approx = None
+        self.__min_radius = None
         # return image
         return np.ndarray.__array_wrap__(self, out_arr, context)
+
+    ####################################################################################################
+    ########################################### CLASS METHOD ###########################################
 
     @classmethod
     def fromList(cls, cnts):
@@ -60,6 +69,9 @@ class vContour(np.ndarray):
             return vContours(cls(c) for c in cnts)
         else:
             raise ValueError('fromList() constructor requires a list of contours of type nd.array') from None
+
+    ####################################################################################################
+    ####################################### vContour PROPERTIES ########################################
 
     def __eq__(self, other):
         return True if np.array_equal(self, other) else False
@@ -187,8 +199,9 @@ class vContour(np.ndarray):
     @property
     def approx(self):
         if self.__approx is None:
-            eprint('Error: approximation not yet performed. Please make sure to run \n'
-                   'getApprox(epsilon) function before attempting to access this property.\n')
+            eprint('\nError: approximation not yet performed. Using default parameters to calculate \n'
+                   ' Use cnt.getApprox(epsilon = 0.02, close = True) function in order to fine tune. \n')
+            self.getApprox()
         else:
             return self.__approx
 
@@ -196,15 +209,41 @@ class vContour(np.ndarray):
     def approx(self, val):
         self.__approx = val
 
-    def getApprox(self, epsilon = 0.01, closed = True):
+    @property
+    def min_radius(self):
+        if self.__min_radius is None:
+            _, self.min_radius = cv2.minEnclosingCircle(self)
+        return self.__min_radius
+
+    @min_radius.setter
+    def min_radius(self, val):
+        self.__min_radius = val
+
+    ####################################################################################################
+    ######################################## CONTOUR FUNCTIONS #########################################
+
+    def getApprox(self, epsilon = 0.02, closed = True):
         self.approx = cv2.approxPolyDP(self, epsilon * self.perim, closed)
         return self.approx
+
+    def minEnclosingCircle(self):
+        return cv2.minEnclosingCircle(self)
+
+    def minEnclosingTriangle(self):
+        return cv2.minEnclosingTriangle(self)
 
 
 ####################################################################################################
 ######################################### BEGIN vContours ##########################################
 
 class vContours(list):
+    """ vContours is a subclass of list that enables us to do some common computer vision/image
+    analysis functions on lists composed of vContour objects. Common operations include sorting,
+    obtaining an ROI, and creating masks.
+    """
+
+    ####################################################################################################
+    ######################################### DUNDER FUNCTIONS #########################################
 
     def __init__(self, iterable):
         super(vContours, self).__init__(iterable)
@@ -222,7 +261,7 @@ class vContours(list):
         return vContours(super().__add__(rhs))
 
     def __getitem__(self, item):
-        return vContours(super().__getitem__(item))
+        return vContour(super().__getitem__(item))
 
     def __setitem__(self, key, val):
          return vContours(super().__setitem__(key, val))
@@ -235,6 +274,9 @@ class vContours(list):
 
     def __delslice__(self, i, j):
         return vContours(super().__delitem__(slice(i, j)))
+
+    ####################################################################################################
+    ########################################## SORTING TOOLS ###########################################
 
     def directionSort(self, method="left-to-right"):
         """ sorts vContours list by direction. Performs in-place sort.
@@ -250,9 +292,13 @@ class vContours(list):
         else:
             super(vContours, self).sort(key=lambda c: c.x, reverse=reverse)
 
-    def sizeSort(self, reverse = True):
+    def sizeSort(self, reverse : bool = True):
         """ sorts vContours list by size. Performs in-place sort. Defaults to large to small.
         reversed : bool, default: True, defaults sorts by size from large to small. If set to False,
                    will sort vContours from small to large.
         """
-        super(vContours, self).sort(key=cv2.contourArea, reverse=reverse)
+        super(vContours, self).sort(key=lambda c: c.area, reverse=reverse)
+
+
+
+

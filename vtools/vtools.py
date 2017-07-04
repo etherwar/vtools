@@ -11,13 +11,14 @@ import pickle
 import collections
 import functools
 import inspect
-import os.path
+import os
+import glob
 import re
 import unicodedata
 import uuid
 import sys
 from pyperclip import copy
-
+import itertools
 
 ####################################################################################################
 ########################################## CLASS HELPERS ###########################################
@@ -38,7 +39,7 @@ def header(text, **kwargs) -> str:
     halign = hdict.get(kwargs.get('halign', None), '^') # get halign kwarg (defaults to ^ for center)
     width = kwargs.get('width', 100)                    # get width kwarg (defaults to 100 chrs wide)
     pad = kwargs.get('pad', True)                       # get padding kwarg (defaults to True)
-    header = kwargs.get('header', False)                # get header kwarg (defaults to False)
+    header = kwargs.get('header', True)                # get header kwarg (defaults to False)
     char = kwargs.get('char', '#')                      # get char kwarg (defaults to '#')
     clip = kwargs.get('clip', True)                     # get clip kwarg (defaults to True)
 
@@ -236,7 +237,70 @@ def flatten(aList):
             else flatten(aList[0]) + flatten(aList[1:]))
 
 def eprint(*args, **kwargs):
+    """ Prints an error message to the user in the console (prints to sys.stderr), passes
+    all provided args and kwargs along to the function as usual. Be aware that the 'file' argument
+    to print can be overridden if supplied again in kwargs.
+    """
     print(*args, file=sys.stderr, **kwargs)
+
+def imgPaths(directory = None, *, img_ext = ('.png', '.jpg', '.jpeg', '.gif', '.tif', '.bmp'), recursive = False):
+    """ Generator function that returns paths for all image files in a directory. Has optional
+    boolean parameters for whether the function should recursively yield file objects
+    :param directory : str, full path representing what base directory to start search from,
+                       alternatively, if not set, search will begin in os.getcwd()
+    :type directory  : str
+    :param img_ext   : iterable, (not str) list, tuple, or generator of image extensions in string
+                       format. (e.g. ('.jpg', '.png') or ('.png',)
+    :type  img_ext   : iter
+    :param recursive : bool, default False, whether you would like your search to be recursive
+    :return          : a list of images from the supplied directory matching img_ext file extension
+    :type return     : list
+    """
+
+    # alias the itertools chain from iterable generator
+    cfi = itertools.chain.from_iterable
+
+    if directory is not None:
+
+        # handle case if directory is supplied with trailing slash
+        if directory[-1] == '/':
+            # handle case whether or not recursive property is True, False case evaluated first
+            directory = directory[:-1]
+
+        # handle case where directory is supplied with windows style double backslash
+        elif directory[-2] == '\\':
+            directory = directory[:-2]
+
+        # handle case whether or not recursive property is True, False case evaluated first
+        glob_str = f'{directory}/*' if recursive is False else f'{directory}/**/**'
+
+    else:
+    # handle case whether or not recursive property is True, False case evaluated first
+        glob_str = f'{os.getcwd()}/*' if recursive is False else f'{os.getcwd()}/**/**'
+
+    # for each image path in the iglob for each extension that is sought, yield an OS normalized path
+    for imgPath in cfi(glob.iglob(f'{glob_str}{ext}', recursive = recursive) for ext in img_ext):
+        yield normPath(imgPath)
+
+def normPath(path : str) -> str:
+    """ Helper function that's mission is to normalize path strings. Accomplishes this by changing path
+    strings that are passed in to it from Windows style path strings (unescaped backslashes) and windows style
+    python path strings (escaped backslashes i.e. double backslash) to unix style strings (forward slashes)
+
+    :param path: str, path to normalize.
+    :return:
+    """
+    # first convert any instances of double backslash paths (e.g. windows python style)
+    # to single backslash paths
+    result = '\\'.join(path.split(r'\\'))
+    # then, convert all single backslash paths (e.g. windows style) to unix-style paths (also compatible)
+    # with python in windows
+    result = '/'.join(result.split('\\'))
+    return result
+
+
+
+
 
 ####################################################################################################
 ############################################## TREES ###############################################

@@ -5,11 +5,11 @@ from setuptools import setup, find_packages
 # version_path = os.path.join(here, 'version.txt')
 # version = open(version_path).read().strip()
 
-requires = [ 'numpy', 'pyperclip>=1.5.0', 'matplotlib>=2.0.0' ]
+requires = [ 'numpy', 'pyperclip>=1.5.0', 'mahotas', 'matplotlib>=2.0.0' ]
 
 try:
     import cv2
-    ver = cv2.__version__[:1]
+    ver = cv2.__version__[0]
     if int(ver) < 3:
         raise ImportError("[*] Error: OpenCV version requirement not met: must have 3 or higher")
 
@@ -30,6 +30,8 @@ CLASSIFIERS = [
     'Natural Language :: English',
     'Operating System :: Linux',
     'Operating System :: Windows',
+    'Topic :: Scientific/Engineering :: Image Recognition',
+    'Topic :: Scientific/Engineering :: Information Analysis',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Topic :: Multimedia :: Images',
     'Topic :: Multimedia :: Video',
@@ -43,16 +45,16 @@ CLASSIFIERS = [
 
 setup(
       name='vtools',
-      version='0.0.29',
-      description='Visual Tools - an object oriented approach to image processing and analysis. Requires OpenCV 3.0+',
+      version='0.0.31',
+      description='Visual Tools - an object oriented approach to image processing and analysis.',
       long_description=open('README.rst', 'r').read(),
       author='Vic Jackson',
       author_email='mr.vic.jackson@gmail.com',
       maintainer='Vic Jackson',
       maintainer_email='mr.vic.jackson@gmail.com',
       license='MIT',
-      keywords=['vtools', 'vimg', 'OpenCV', 'image analysis', 'image processing', 'image', 'processing', 'OO',
-                'Object', 'Oriented'],
+      keywords=['vtools', 'vimg', 'OpenCV', 'image analysis', 'contours', 'computer', 'vision', 'visual',
+                'contour', 'analysis', 'image', 'processing', 'image', 'processing', 'OO', 'Object', 'Oriented'],
       url='https://github.com/etherwar/vtools',
       download_url='https://github.com/etherwar/vtools/archive/master.zip',
       zip_safe=False,
