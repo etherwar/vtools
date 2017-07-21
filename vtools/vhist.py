@@ -1,3 +1,8 @@
+####################################################################################################
+# DEPRECATED, DO NOT USE!!!!!!!!!!!! ###############################################################
+
+
+
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
@@ -11,6 +16,7 @@ class vHist(np.ndarray):
     def __new__(cls, images, channels, mask = None, histSize = None, ranges = None, RGB = None):
 
         """
+
         vHist is a class to simplify the display of different kind of histograms. Meant to be used in conjunction
         with the vImg class. By adding a single 3-tuple bool parameter (RGB) to indicate which channels are active 
         in the histogram, we can automatically calculate what type of histogram to show information for. Therefore,

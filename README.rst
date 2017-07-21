@@ -25,6 +25,7 @@ Dependencies
 OpenCV 3.0+ (required)
 Python 3.6+ (required)
 Mahotas (required)
+scikit-image (required)
 matplotlib (tested with 2+, required to visualize histograms)
 
 

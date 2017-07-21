@@ -26,7 +26,7 @@ class vColor(tuple):
         elif len(args) == 1 and hasattr(args[0], '__iter__') and len(list(args[0])) == 3:
             color_tup = tuple(args[0]) if not BGR else tuple(args[0])[::-1]
         else:
-            eprint("\n\nA tuple or iterable in RGB integer format. May be in BGR if "
+            eprint("\n\nA tuple or iterable in RGB uint8 (0-255) format. May be in BGR if "
                    "you specify BGR = True as a parameter.\n\n")
             return
 
@@ -35,21 +35,31 @@ class vColor(tuple):
         return obj
 
     def __init__(self, *args, BGR = False):
+        """
+        Represents a
+        :param args:
+        :param BGR:
+        """
 
         if len(args) == 3:
             color_tup = tuple(e for e in args) if not BGR else tuple(e for e in args)[::-1]
         elif len(args) == 1 and hasattr(args[0], '__iter__') and len(list(args[0])) == 3:
             color_tup = tuple(args[0]) if not BGR else tuple(args[0])[::-1]
-
+        else:
+            eprint("\n\nA tuple or iterable in RGB uint8 (0-255) format. May be in BGR if "
+                   "you specify BGR = True as a parameter.\n\n")
+            return
         self._r, self._g, self._b = color_tup
         self._RGB = not BGR
 
     def __eq__(self, comp):
         return (c for c in self) == (c for c in comp)
 
+    @property
     def RGB(self):
         return vColor(self._r, self._g, self._b)
 
+    @property
     def BGR(self):
         return vColor(self._b, self._g, self._r, BGR = True)
 

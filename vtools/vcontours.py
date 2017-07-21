@@ -68,7 +68,7 @@ class vContour(np.ndarray):
         if isinstance(cnts, list):
             return vContours(cls(c) for c in cnts)
         else:
-            raise ValueError('fromList() constructor requires a list of contours of type nd.array') from None
+            raise ValueError('fromList() constructor requires a list of contours of type numpy.ndarray') from None
 
     ####################################################################################################
     ####################################### vContour PROPERTIES ########################################
@@ -212,7 +212,7 @@ class vContour(np.ndarray):
     @property
     def min_radius(self):
         if self.__min_radius is None:
-            _, self.min_radius = cv2.minEnclosingCircle(self)
+            _, self.min_radius = self.minEnclosingCircle()
         return self.__min_radius
 
     @min_radius.setter
@@ -222,16 +222,38 @@ class vContour(np.ndarray):
     ####################################################################################################
     ######################################## CONTOUR FUNCTIONS #########################################
 
-    def getApprox(self, epsilon = 0.02, closed = True):
+    def getApprox(self, epsilon = 0.01, closed = True):
+        """ Approximates a contour shape to another shape with less number of vertices depending upon
+        the precision we specify. It is an implementation of Douglas-Peucker algorithm. Check the wikipedia
+        page for algorithm and demonstration."""
         self.approx = cv2.approxPolyDP(self, epsilon * self.perim, closed)
         return self.approx
 
     def minEnclosingCircle(self):
+        """
+
+        :return :
+        """
         return cv2.minEnclosingCircle(self)
 
-    def minEnclosingTriangle(self):
-        return cv2.minEnclosingTriangle(self)
 
+    def minEnclosingTriangle(self):
+        min_triangle = cv2.minEnclosingTriangle(self)
+        return vContour(min_triangle)
+
+    def minEnclosingRect(self):
+        """ Returns a vContour representing a rotated rectangle boundary of a contour object, a Box2D
+        structure that contains the following details: ( center (x,y), (width, height), angle of rotation ).
+        However, to draw this rectangle, we need 4 corners of the rectangle. It is obtained by the function
+        cv2.boxPoints """
+        min_rect = cv2.minAreaRect(self)
+        box = np.int0(cv2.boxPoints(min_rect)).astype(np.int32)
+        return vContour(box)
+
+    def boundingRect(self):
+        """ Returns a straight rectangle, does not consider the rotation of the object. Therefore
+        the area of the bounding rectangle will almost always not be minimum."""
+        return cv2.boundingRect(self)
 
 ####################################################################################################
 ######################################### BEGIN vContours ##########################################
@@ -261,7 +283,10 @@ class vContours(list):
         return vContours(super().__add__(rhs))
 
     def __getitem__(self, item):
-        return vContour(super().__getitem__(item))
+        if isinstance(item, slice):
+            return vContours(super().__getitem__(item))
+        else:
+            return vContour(super().__getitem__(item))
 
     def __setitem__(self, key, val):
          return vContours(super().__setitem__(key, val))
