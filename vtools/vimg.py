@@ -12,8 +12,9 @@ import mahotas as mh
 
 from typing import List, Dict, Tuple
 from itertools import combinations
-from .vtools import eprint
+from .vtools import eprint, trimPath
 from .vcontours import vContour, vContours
+from .vhist import vHist
 from .types import contour_list_type, color_type, check_odd
 from .config import __IDENT__
 from .colors import WHITE, BLACK, GREEN, RED, BLUE, AQUA, MAROON, FUCHSIA, OLIVE, NAVY, TEAL, PURPLE, YELLOW
@@ -29,7 +30,7 @@ class vImg(np.ndarray):
     ####################################################################################################
     ########################################## DUNDER METHODS ##########################################
 
-    def __new__(cls, imgFn=None, **kwargs) -> np.ndarray:
+    def __new__(cls, imgFN=None, **kwargs) -> np.ndarray:
         """ Initiates a vImg object using np.ndarray as base class. The vImg object extends the array
         to allow for image modification methods to be executed on the base class.
         Parameters:
@@ -58,7 +59,7 @@ class vImg(np.ndarray):
             if color != BLACK: blank_image[:, :] = color
             return blank_image
 
-        if imgFn is None:
+        if imgFN is None:
             try:
                 if kwargs.get('img', None) is not None:
                     # if the img parameter is provided
@@ -76,7 +77,7 @@ class vImg(np.ndarray):
                 obj.__h, obj.__w = obj.shape[:2]
                 obj.__center = (obj.w // 2, obj.h // 2)
                 obj.__color = kwargs.get('color', BLACK)
-                # TODO: Add better support for multiple color types
+                # TODO: Add support for multiple color types
 
                 return obj
 
@@ -92,20 +93,20 @@ class vImg(np.ndarray):
                 return
 
         try:
-            obj = np.asarray(cv2.imread(imgFn)).view(cls)
-            obj.__imgFn = imgFn
+            obj = np.asarray(cv2.imread(imgFN)).view(cls)
+            obj.__imgFN = imgFN
             obj.__h, obj.__w = obj.shape[:2]
         except cv2.error:
             raise ValueError("OpenCV Error occurred.") from None
         except:
-            raise ValueError("Unable to open file at {}. Check the file exists.".format(imgFn)) \
+            raise ValueError("Unable to open file at {}. Check the file exists.".format(imgFN)) \
                   from None
 
         obj.__center = (obj.__w // 2, obj.__h // 2)
         obj.__color = kwargs.get('color', (0, 0, 0))
         obj.__title = kwargs.get('title', None)
         obj.__kwargs = kwargs
-        obj.__kwargs['imgFn'] = f"'{imgFn}'"
+        obj.__kwargs['imgFn'] = f"'{imgFN}'"
         return obj
 
     def __array_finalize__(self, obj):
@@ -118,7 +119,8 @@ class vImg(np.ndarray):
         self.__title = getattr(obj, '__title', None)
         self.__imgFN = getattr(obj, '__imgFN', None)
         self.__kwargs = getattr(obj, '__kwargs', None)
-        self.__cDict = {'b': 'Blue', 'g': 'Green', 'r': 'Red'}
+        self.__cDict = {'b': 'Blue', 'g': 'Green', 'r': 'Red',
+                        'B': 'Blue', 'G': 'Green', 'R': 'Red'}
         self.__current_title = self.__title
 
     def __array_wrap__(self, out_arr, context=None):
@@ -133,7 +135,8 @@ class vImg(np.ndarray):
         out_arr.__title = self.__title
         out_arr.__imgFN = self.__imgFN
         out_arr.__kwargs = self.__kwargs
-        out_arr.__cDict = {'b': 'Blue', 'g': 'Green', 'r': 'Red'}
+        out_arr.__cDict = {'b': 'Blue', 'g': 'Green', 'r': 'Red',
+                           'B': 'Blue', 'G': 'Green', 'R': 'Red'}
         out_arr.__current_title = self.__title
 
         return np.ndarray.__array_wrap__(self, out_arr, context)
@@ -159,22 +162,28 @@ class vImg(np.ndarray):
 
     @staticmethod
     def _isOdd(k : check_odd):
-        """ Private function that just checks to see if any k_value is passed to a function with an even
-        integer by mistake.
+        """ Private function that just checks to see if any k_value is passed to a function with
+        an even integer value. Instead of raising an exception, I've come here today to write a function
+        that tries to automatically correct my stupid mistake that I make repeatedly. That mistake happens
+        to be trying to pass a k parameter with an even element (k-boxes need to be odd-dimensioned because they
+        affect a center pixel. Even value, no distinct center pixel).
         :param check_odd k: Could be a single k-value or tuple of ints to be checked.
         :return bool: True if both are odd, raises an exception if a number is even.
         """
-        if issubclass(type(k), tuple):
-            # If any of the elements of tuple k are less than 3 or even, raise an exception
-            if any(e % 2 == 0 or e < 3 for e in k):
-                raise ValueError("[-] Must be a tuple of odd integers. Aborting")
-            else:
-                return
-        else:
-            if k % 2 == 0 and k > 1:
-                raise ValueError("[-] Must be a tuple of odd integers. Aborting")
-            else:
-                return
+
+
+        k = tuple(k)
+
+        if any(e % 2 == 0 or e < 3 for e in k):
+            # Automatically add one to each value if that value is even,
+            # or set to three if less than three
+            k = [e + 1 if e % 2 == 0
+                 else 3 if e < 3
+                 else e
+                 for e in k]
+            # Inform user you have autocorrected his or her innocent mistake (or needlessly
+            # caused a type exception.) Why did I write it this way again?
+            eprint(f"[-] Must be a tuple of odd integers. Continuing with ({(e for e in k)}), godspeed...")
 
     ####################################################################################################
     ######################################### IMAGE PROPERTIES #########################################
@@ -236,7 +245,9 @@ class vImg(np.ndarray):
 
     @property
     def title(self):
-        if self.__title is None:
+        if self.__title is None and not self.__imgFN is None:
+            self.title = trimPath(self.__imgFN)
+        elif self.__title is None:
             self.title = 'img' + next(__IDENT__)
         return self.__title
 
@@ -598,7 +609,7 @@ class vImg(np.ndarray):
         SobelY = cv2.Sobel(self, cv2.CV_64F, 0, 1)
         return vImg(img=SobelY)
 
-    def sobelCombined(self):
+    def SobelCombined(self):
         """Performed on a grayscale image, returns the Sobel gradient image along both axes.
         :return: 
         :rtype: vImg
@@ -667,7 +678,7 @@ class vImg(np.ndarray):
                   "e.g. vImg('test.png').autoCanny().simpleContours()\n")
             return vContour.fromList(cv2.findContours(self.autoCanny(), quantity, complexity)[1])
 
-    def evalContours(self, cnts = None, count = None, reverse = True, outline_color = GREEN, font_color = WHITE):
+    def evalContours(self, cnts = None, count = None, reverse = True, outline_color = GREEN, font_color = RED):
         """This function exists to make it easier to evaluate contours in an image. Calling this
         function and supplying a list of contours iterates through the list of contours and
         identifies them one at a time on the image while simultaneously displaying useful
@@ -727,11 +738,26 @@ class vImg(np.ndarray):
     ####################################################################################################
     ######################################### HISTOGRAM TOOLS ##########################################
 
-    def histFlat(self, RGB = (True,)*3, mask = None, bins = (256,), xlimit = (0, 256),
+    def histFlat(self, RGB = (False,)*3, mask = None, bins = (256,), xlimit = (0, 256),
                  normal = True, display = True):
-        """ By adding a single 3-tuple bool parameter (RGB) to indicate which channels are active 
+        """  histFlat turns an image into a "flat histogram" that contains data about one or more channels
+        of the current image according to the
+        By adding a single 3-tuple bool parameter (RGB) to indicate which color channels are desired
         in the histogram, we can make showing different types of histograms trivial.
+
+        :param RGB:
+        :param mask:
+        :param bins: This is the number of bins we want to use when computing a histogram. Again, this is a list, one
+                     for each channel we are computing a histogram for. The bin sizes do not all have to be the same.
+                     Here is an example of 32 bins for each channel: [32, 32, 32] .
+
+        :param xlimit:
+        :param normal:
+        :param display:
+        :return:
         """
+
+        R, G, B = RGB
 
         if not isinstance(bins, list):
             bins = list(bins)
@@ -742,61 +768,77 @@ class vImg(np.ndarray):
         # TODO: Make sure changing bins and xlimit to tuple doesn't have ill effects on function call
 
         results = {}
-        # Check if image is grayscale
-        assert RGB != (False, False, False), "To get a grayscale histogram from a color image, " \
-                                             "first convert to grayscale using the gray() method"
 
-        if len(self.shape) == 2: # 1-dimensional grayscale image
-            if display:
+        image = self.copy()
+
+        # If all the elements of RGB are False...
+        if not any(RGB):
+            # First, convert the image to grayscale
+            image = image.gray()
+
+        # Check if image is grayscale
+        if len(image.shape) == 2: # 1-dimensional grayscale image
+
+            # If display parameter is True, initialize the plot
+            if display is True:
                 plt.figure()
                 plt.title(f"'Flattened' Grayscale Histogram ('{self.title}')")
                 plt.xlabel("Bins")
                 plt.ylabel("# of Pixels")
 
-            hist = cv2.calcHist([self], [0], mask, bins, xlimit)
+            # Calculate the histogram based on the only available values (since it's grayscale)
+            hist = cv2.calcHist([image], [0], mask, bins, xlimit)
 
-            if normal:
-                hist /= hist.sum()
+            # If the normalization parameter is True...
+            if normal is True:
+                hist /= hist.sum() # ...normalize the histogram
 
-            if display:
+            # If display parameter is True, plot the histogram
+            if display is True:
                 plt.plot(hist, color='k')
                 plt.xlim(xlimit)
 
-            results.update({'k' : hist})
+            # Update the results dictionary
+            results['k'] = hist
 
-        elif len(self.shape) == 3: # 2-dimensional image with at least 1 color channel
+        # if 2-dimensional image with at least 1 color channel
+        elif len(image.shape) == 3:
 
-            channels = cv2.split(self)
+            # split the image into its separate 2-dimensional matrices for B, G, and R
+            channels = cv2.split(image)
+
+            # initialize a tuple of color identifiers in the correct BGR order
             colors = ('b', 'g', 'r')
+
+            # create a zipped tuple with each channel and its color identifier if the RGB parameter tuple is
+            # marked True for that color. Ex.: RGB (False, True, True) -> ((channel1, 'b'), (channel2, 'g'))
             cczip = tuple(e for e in zip(channels, colors, RGB[::-1]) if e[2] is True)
-
-            if display:
-                plt.figure()
-
-            *chans, final_chan = [self.__cDict[e[1]] for e in cczip]
-
-            if display:
-                plt.title('Flattened Color Histogram for color channels '
-                          f"{' '.join(e for e in chans)}, and {final_chan} ('"
-                          f"{self.title}').")
-                plt.xlabel("Bins")
-
-                if normal:
-                    plt.ylabel("Percentage of total")
-                else:
-                    plt.ylabel("# of Pixels")
 
             for chan, clr, _ in cczip:
                 hist = cv2.calcHist([chan], [0], mask, bins, xlimit)
+                results[clr] = chan
+                if normal: hist /= hist.sum()
 
-                if normal:
-                    hist /= hist.sum()
+            if display is False:
+                return results
 
-                if display:
-                    plt.plot(hist, color=clr)
-                    # plt.xlim(xlimit) already specified
+            plt.figure()
 
-                results.update({ clr : chan })
+            *chans, final_chan = [self.__cDict[e[1]] for e in cczip]
+
+            plt.title('Flattened Color Histogram for color channels '
+                      f"{' '.join(e for e in chans)}, and {final_chan} ('"
+                      f"{self.title}').")
+
+            plt.xlabel("Bins")
+
+            if normal:
+                plt.ylabel("Percentage of total")
+            else:
+                plt.ylabel("# of Pixels")
+
+            for chan, clr in results.items():
+                plt.plot(hist, color=clr)
 
         return results
 
@@ -812,6 +854,7 @@ class vImg(np.ndarray):
 
         if not isinstance(xlimit, list):
             xlimit = list(xlimit)
+
         assert len(self.shape) > 2, "Two dimensional histograms must not be grayscale"
 
         horizontal_subchannels = len([e for e in RGB if e is True])
@@ -881,7 +924,7 @@ class vImg(np.ndarray):
         if display:
             print(f"3D histogram shape: {hist.shape}, with {hist.flatten().shape[0]} values")
 
-        return hist
+        return vHist(hist)
 
     def equalizeHist(self, error_on_color = False):
 
@@ -930,8 +973,9 @@ class vImg(np.ndarray):
         try:
             return self[c.y : c.y2, c.x : c.x2]
 
-        except Exception:
-            eprint('[Error] are you sure this contour belongs to this image?')
+        except IndexError:
+            eprint('[-] IndexError: are you sure this contour belongs to this image?')
+        
 
     ####################################################################################################
     ######################################## FEATURE EXTRACTORS ########################################

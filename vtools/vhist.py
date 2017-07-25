@@ -1,5 +1,5 @@
 ####################################################################################################
-# DEPRECATED, DO NOT USE!!!!!!!!!!!! ###############################################################
+# NOT FINISHED OR MEANT FOR USE AS OF YET ##########################################################
 
 
 
@@ -13,7 +13,7 @@ from itertools import compress
 
 class vHist(np.ndarray):
 
-    def __new__(cls, images, channels, mask = None, histSize = None, ranges = None, RGB = None):
+    def __new__(cls, hist, img, RGB = (False,)*3, type = None, mask = None):
 
         """
 
@@ -22,12 +22,7 @@ class vHist(np.ndarray):
         in the histogram, we can automatically calculate what type of histogram to show information for. Therefore,
         initialization and show functionality may be standardized.
         
-        Content below is copyright Dr. Adrian Rosebrock from his excellent book Practical Python and OpenCV. A must 
-        read if you intend to learn how to use OpenCV properly and in the most consumable fashion currently out there.
-        I am hoping he doesn't mind me using it in the open here, but I suppose I should really put contacting him 
-        and asking his explicit permission to use snippets like these in this library is ok with him. Then 
-        the only hard part will be remembering to delete these couple of sentences.
-        
+
         images   : This is the image that we want to compute a histogram for. Wrap it as a list: [myImage] . 
         channels : A list of indexes, where we specify the index of the channel we want to compute a histogram for. 
                    To compute a histogram of a grayscale image, the list would be [0] . To compute a histogram for all 
@@ -45,32 +40,17 @@ class vHist(np.ndarray):
         """
 
         # Init assert statements. Make sure basic class parameter requirements are met.
-        assert hasattr(images, '__iter__'), "images must be a list"
 
-        assert hasattr(channels, '__iter__'), "channels must be a list/iterable"
-        if not isinstance(channels, list):
-            channels = list(channels)
-
-        assert not(histSize is None), "None check failed for histSize"
-        assert hasattr(histSize, '__iter__'), "histSize must be a list/iterable"
-        if not isinstance(histSize, list):
-            histSize = list(histSize)
-
-        assert not(ranges is None), "None check failed for ranges"
-        assert hasattr(ranges, '__iter__'), "ranges must be a list/iterable"
-        if not isinstance(ranges, list):
-            ranges = list(ranges)
-
-        assert not RGB is None, "None check failed for RGB"
+        assert not type is None, "None check failed for type parameter."
 
         assert len(RGB) == 3 and isinstance(RGB, tuple) , "Must provide a 3-tuple with True or False " \
-            "for each value representing RGB color channel inclusion."
+            "elements for each value. True if channel is included in calculated histogram, False if not."
 
-        obj = cv2.calcHist(images, channels, mask, histSize, ranges)
+        # Here is the meat for subclassed numpy ndarray types, this casts a new instance of
+        # the passed parameter hist.
+        obj = np.asarray(hist).view(cls)
 
-        obj = np.asarray(obj).view(cls)
-
-        obj.__types = {1 : 'flat', 2 : '2D', 3 : '3D'}
+        obj.__types = {1 : '1D', 2 : '2D', 3 : '3D'}
 
         if obj.shape[1] == 1 and len(obj.shape) == 2:
             obj.__type = obj.__types[1]
@@ -83,11 +63,10 @@ class vHist(np.ndarray):
 
 
         obj.__RGB = RGB
-        obj.__images = images
-        obj.__channels = channels
+        obj.__image = img
+        obj.__type = type
         obj.__mask = mask
-        obj.__histSize = histSize
-        obj.__ranges = ranges
+
 
         return obj
 
@@ -96,35 +75,31 @@ class vHist(np.ndarray):
             numpy n-dimensional arrays work.
         """
         if obj is None: return
-        self.__images = getattr(obj, '__images')
-        self.__channels = getattr(obj, '__channels')
-        self.__mask = getattr(obj, '__mask')
-        self.__histSize = getattr(obj, '__histSize')
-        self.__ranges = getattr(obj, '__ranges')
-        self.__type = getattr(obj, '__type')
-        self.__types = getattr(obj, '__types')
         self.__RGB = getattr(obj, '__RGB')
+        self.__image = getattr(obj, '__image')
+        self.__type = getattr(obj, '__type')
+        self.__mask = getattr(obj, '__mask')
+
+
 
     def __array_wrap__(self, out_arr, context=None):
         """__array_wrap__ gets called at the end of numpy ufuncs and
         other numpy functions, to allow a subclass to set the type of
         the return value and update attributes and metadata"""
-        self.__images = getattr(out_arr, '__images')
-        self.__channels = getattr(out_arr, '__channels')
-        self.__mask = getattr(out_arr, '__mask')
-        self.__histSize = getattr(out_arr, '__histSize')
-        self.__ranges = getattr(out_arr, '__ranges')
-        self.__type = getattr(out_arr, '__type')
-        self.__types = getattr(out_arr, '__types')
-        self.__RGB = getattr(out_arr, '__RGB')
-        # return image
-        out_arr.__images = getattr(self, '__images')
+
+        out_arr.__RGB = self.__RGB
+        out_arr.__image = self.__image
+        out_arr.__type = self.__type
+        out_arr.__mask = self.__mask
+
         return np.ndarray.__array_wrap__(self, out_arr, context)
 
     def __eq__(self, other):
         return True if np.array_equal(self, other) else False
 
     def show(self, bins = [256], xlimit = [0, 256]):
+
+        if self.__type == '3D':
 
         # Check if type is 1-dimensional and RGB is (False, False, False)
         if self.__type == self.__types[1] and sum(1 for e in self.__RGB if e is True) == 0:
@@ -160,7 +135,7 @@ class vHist(np.ndarray):
             # number of bins in the histogram from 256 to 32 so we can
             # better visualize the results
 
-def plot_histogram(image, title, mask=None):
+def plotHist(image, title, mask=None):
 	# grab the image channels, initialize the tuple of colors and
 	# the figure
 	chans = cv2.split(image)

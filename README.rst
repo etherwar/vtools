@@ -1,7 +1,7 @@
 vtools
 ============
 
-vimg README rev.002 2017/6/02
+vimg README rev.003 2017/7/21
 This library is a project that is the result of my foray into the realm of computer vision.
 This project is a direct result of exploring and thinking about a highly simple and intuitive
 way to create an image object, and then easily be able to perform a powerful set of
@@ -23,10 +23,15 @@ provides.
 Dependencies
 ------------
 OpenCV 3.0+ (required)
+
 Python 3.6+ (required)
+
 Mahotas (required)
+
 scikit-image (required)
+
 matplotlib (tested with 2+, required to visualize histograms)
+
 
 
 Install vtools

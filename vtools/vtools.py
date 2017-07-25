@@ -298,6 +298,13 @@ def normPath(path : str) -> str:
     result = '/'.join(result.split('\\'))
     return result
 
+def trimPath(path : str) -> str:
+    """ Helper function that removes everything but the filename from a full path string """
+
+    result = normPath(path)
+
+    return result[result.rfind('/') + 1:]
+
 
 
 
