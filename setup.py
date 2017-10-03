@@ -5,19 +5,19 @@ from setuptools import setup, find_packages
 # version_path = os.path.join(here, 'version.txt')
 # version = open(version_path).read().strip()
 
-requires = [ 'numpy', 'pyperclip>=1.5.0', 'mahotas', 'matplotlib>=2.0.0' ]
+requires = ['numpy', 'pyperclip>=1.5.0', 'mahotas', 'matplotlib>=2.0.0']
 
 try:
     import cv2
     ver = cv2.__version__[0]
     if int(ver) < 3:
-        raise ImportError("[*] Error: OpenCV version requirement not met: must have 3 or higher")
+        raise ImportError("[-] Error: OpenCV version requirement not met: must have 3 or higher")
 
 except ImportError:
-    raise ImportError("[*] Error: Could not find a working instance of OpenCV")
+    raise ImportError("[-] Error: Could not find a working instance of OpenCV")
 
-except:
-    raise ImportError("[*] Error: Problem checking for OpenCV install on your system.")
+except Exception:
+    raise ImportError("[-] Error: Problem checking for OpenCV install on your system.")
 
 else:
     print("[+] Valid OpenCV installation located.")
@@ -45,7 +45,7 @@ CLASSIFIERS = [
 
 setup(
       name='vtools',
-      version='0.0.32',
+      version='0.0.35',
       description='Visual Tools - an object oriented approach to image processing and analysis.',
       long_description=open('README.rst', 'r').read(),
       author='Vic Jackson',

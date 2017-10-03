@@ -36,8 +36,6 @@ class vContour(np.ndarray):
         self.__approx = None
         self.__min_radius = None
 
-
-
     def __array_wrap__(self, out_arr, context=None):
         """__array_wrap__ gets called at the end of numpy ufuncs and
         other numpy functions, to allow a subclass to set the type of
@@ -236,7 +234,6 @@ class vContour(np.ndarray):
         """
         return cv2.minEnclosingCircle(self)
 
-
     def minEnclosingTriangle(self):
         min_triangle = cv2.minEnclosingTriangle(self)
         return vContour(min_triangle)
@@ -257,6 +254,7 @@ class vContour(np.ndarray):
 
 ####################################################################################################
 ######################################### BEGIN vContours ##########################################
+
 
 class vContours(list):
     """ vContours is a subclass of list that enables us to do some common computer vision/image
